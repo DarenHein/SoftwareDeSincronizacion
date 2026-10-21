@@ -1,6 +1,6 @@
 import os 
 import sys
-
+import shutil 
 
 # --- Rutas de Configuración ---
 pcPath = "/Users/luismanjarrezcarbajal/Music/Music/Media.localized/MUSIC"
@@ -45,18 +45,27 @@ def joinPathArtist(artistas : list , path : str) -> list :
         artistasPath.append(path,artista)
     return artistasPath 
 
-def sync_missing_artists(listPath : list , destinyPath : str ) -> list :
+def sync_missing_artists(listPath : list , pathOrigen: str , pathDestino : str) -> list :
     artistasQueExisten = [] 
     for element in listPath : 
         if os.path.exists(element) :
             artista = os.path.basename(element)
-            artistasQueExisten.append(artista) # aqui vive los artistas que viven en ambos pero lo ocuparemos para validar si comparten mismos albumes en amboes dispositivos  
-            pass 
+            artistasQueExisten.append(artista)
         else : 
-            # aca movemos los archivos 
-            pass 
+            artista = os.path.basename(element)
+            rutaDestino = os.path.join(pathDestino,artista)
+            rutaOrigen = os.path.join(pathOrigen,artista)
+            if os.path.exists(rutaOrigen):
+                try : 
+                    shutil.move(rutaOrigen,rutaDestino)
+                except Exception as e : 
+                    print(f"Error a ocurrido {e}")
+            else : 
+                print("Artista no se encontro en el origen ")
+    return artistasQueExisten 
         
-# primeros pasos 
+        
+
 def validatePath(path):
     if os.path.exists(path) : 
         return True 
@@ -100,6 +109,9 @@ if __name__ == "__main__" :
         artistasPc = getListArtist(pcPath,listaOmitidos)
         artistasSD = getListArtist(sdPath,listaOmitidos)
         artistasPcPath = joinPathArtist(artistasPc,sdPath) #paso importante por que con esto veremos si existen en el host 
+        artistas_pendientes_de_albumes = sync_missing_artists(artistasPcPath,pcPath,sdPath)
+        # ahora el siguiente paso es de los artiatas que existen en ambos dispositivos (local , sd) veremos si comparten los albumes relacion uno a muchos 
+        
         
         if flagHost : 
             print("Dispositivo conectado ... ")
