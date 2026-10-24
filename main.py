@@ -2,7 +2,6 @@ import os
 import sys
 import shutil
 
-# --- Configuración de Rutas ---
 pcPath = "/Users/luismanjarrezcarbajal/Music/Music/Media.localized/MUSIC"
 sdPath = "/Volumes/MEMORIA/MUSICA"          
 hostPath = "/Volumes/MEMORIA/MUSICA"        
@@ -31,16 +30,11 @@ listaOmitidos = [
     "Unknown Album"
 ]
 
-
-# --- Funciones de Utilidad ---
-
 def validatePath(path: str) -> bool:
     return os.path.exists(path)
 
-
 def cleanList(artistas: list, omitidos: list) -> list:
     return [artista for artista in artistas if artista not in omitidos and not artista.startswith("._")]
-
 
 def joinPathArtist(artistas: list, path: str) -> list:
     artistasPath = []
@@ -48,23 +42,18 @@ def joinPathArtist(artistas: list, path: str) -> list:
         artistasPath.append(os.path.join(path, artista))
     return artistasPath
 
-
 def flagStep1(flaglocal: bool, flagSd: bool) -> bool:
     if flaglocal == True and flagSd == True:
         return True
     else:
         return False
 
-
-# --- Funciones de Negocio y Sincronización ---
-
-def getListArtist(path: str, omitidos: list) -> list:
+def getCleanList(path: str, omitidos: list) -> list:
     lista_artistas = os.listdir(path)
     artistas = cleanList(lista_artistas, omitidos)
     return artistas
 
-
-def sync_missing_artists(listPath: list, pathOrigen: str, pathDestino: str) -> list:
+def sync_missing_artists(listPath: list, pathOrigen: str, pathDestino: str, modo: str = "move") -> list:
     artistasQueExisten = [] 
     for element in listPath: 
         if os.path.exists(element):
@@ -76,16 +65,45 @@ def sync_missing_artists(listPath: list, pathOrigen: str, pathDestino: str) -> l
             rutaOrigen = os.path.join(pathOrigen, artista)
             if os.path.exists(rutaOrigen):
                 try:
-                    shutil.move(rutaOrigen, rutaDestino)
+                    if modo == "move":
+                        shutil.move(rutaOrigen, rutaDestino)
+                        print(f"📦 [Artista Movido] {artista}")
+                    elif modo == "copy":
+                        shutil.copytree(rutaOrigen, rutaDestino)
+                        print(f"📋 [Artista Copiado] {artista}")
+                    
+                    artistasQueExisten.append(artista) 
                 except Exception as e:
-                    print(f"Error a ocurrido {e}")
+                    print(f"❌ Error ha ocurrido con el artista {artista}: {e}")
             else:
-                print("Artista no se encontro en el origen ")
-    return artistasQueExisten 
+                print(f"⚠️ Artista '{artista}' no se encontró en el origen.")
+    return artistasQueExisten
 
-
-# --- Ejecución Principal ---
-
+def transferir_album(artista_album_pc : str , artista_album_sd : str , album : str , modo="move"):
+    if not os.path.exists(artista_album_sd):
+        try:
+            if modo == "move":
+                shutil.move(artista_album_pc, artista_album_sd)
+                print(f"📦 [Movido] '{album}' -> Espacio liberado en PC.")
+            elif modo == "copy":
+                shutil.copytree(artista_album_pc, artista_album_sd)
+                print(f"📋 [Copiado] '{album}' -> Música intacta en PC y SD.")
+        except Exception as e:
+            print(f"❌ Error con el álbum '{album}': {e}")
+            
+def sincronizar_albumes_artistas(artistas_pendientes, dir_origen, dir_destino, lista_omitidos, modo="move"):
+    for artista in artistas_pendientes:
+        artista_path_origen = os.path.join(dir_origen, artista)
+        artista_path_destino = os.path.join(dir_destino, artista)
+        
+        albumes_origen = getCleanList(artista_path_origen, lista_omitidos) 
+        
+        for album in albumes_origen:
+            album_origen = os.path.join(artista_path_origen, album)
+            album_destino = os.path.join(artista_path_destino, album)
+            
+            transferir_album(album_origen, album_destino, album, modo)
+            
 if __name__ == "__main__":
     
     flagSD = validatePath(sdPath)
@@ -102,13 +120,36 @@ if __name__ == "__main__":
         print("Ambos dispositivos concetados ...")
         print("validando Dispositivo ... ")
         
-        artistasPc = getListArtist(pcPath, listaOmitidos)
-        artistasSD = getListArtist(sdPath, listaOmitidos)
+        artistasPc = getCleanList(pcPath, listaOmitidos)
+        artistasSD = getCleanList(sdPath, listaOmitidos)
         artistasPcPath = joinPathArtist(artistasPc, sdPath)
-        artistas_pendientes_de_albumes = sync_missing_artists(artistasPcPath, pcPath, sdPath)
+        artistasPc = getCleanList(pcPath, listaOmitidos)
+        artistasSD = getCleanList(sdPath, listaOmitidos)
+        artistasPcPath = joinPathArtist(artistasPc, sdPath)
+        artistas_pendientes_pc_sd = sync_missing_artists(artistasPcPath, pcPath, sdPath , "move") 
         
+        sincronizar_albumes_artistas(
+            artistas_pendientes=artistas_pendientes_pc_sd,
+            dir_origen=pcPath,
+            dir_destino=sdPath,
+            lista_omitidos=listaOmitidos,
+            modo="move"
+        )
+                
         if flagHost: 
             print("Dispositivo conectado ... ")
+            artistasDap = getCleanList(hostPath,listaOmitidos)
+            artistasSD = getCleanList(sdPath,listaOmitidos)
+            artistasDapPath = joinPathArtist(artistasSD,hostPath) 
+            artistas_pendientes_sd_dap =  sync_missing_artists(artistasDapPath,sdPath,hostPath , "copy") 
+            sincronizar_albumes_artistas(
+                artistas_pendientes=artistas_pendientes_sd_dap,
+                dir_origen=sdPath,
+                dir_destino=hostPath,
+                lista_omitidos=listaOmitidos,
+                modo="copy"
+            )
+            
         else: 
             print("Favor de conectar el dispositivo ... ")
             pass 
@@ -118,5 +159,5 @@ if __name__ == "__main__":
             print("no existe el directorio donde se ecnutra la musica local ... ") 
             pass 
         elif flagSD == False: 
-            print("No se encuntra el directorio de la memoria microSD ...")
+            print("No se encuntra el directorio de la memoria SD ...")
             pass
