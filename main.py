@@ -2,12 +2,7 @@ import os
 import sys
 import shutil
 
-# aun falta el tema de la base de datos por por lo que veo no hace falta solo para tener un control en github pero de ahi en fuera se pensara
-
-# ! ULTIMAS ADECUACIONES YA FUNCIONA ESTA VIVO EL SOFTWARE PERO LO QUE NOS FALTA EN ACTUALIZACIONES 
-# QUE MOVEMOS 
-# los nombres de los albumes como se mueven etc en pocas palabras mas intuitivo 
-# en pasos osea de pc a sd y despues de sd a dap asi
+# Falta alimentar la base de datos 
 
 pcPath = "/Users/luismanjarrezcarbajal/Music/Music/Media.localized/MUSIC"
 sdPath = "/Volumes/MEMORIASD/MUSICA"          
@@ -60,14 +55,16 @@ def getCleanList(path: str, omitidos: list) -> list:
     artistas = cleanList(lista_artistas, omitidos)
     return artistas
 
-def sync_missing_artists(listPath: list, pathOrigen: str, pathDestino: str, modo: str = "move") -> list:
+def sync_missing_artists(listPath: list, pathOrigen: str, pathDestino: str, modo: str = "move") -> tuple: # cunado retornamos dos listas 
     artistasQueExisten = [] 
+    artistasQueNoExisten = []
     for element in listPath: 
         if os.path.exists(element):
             artista = os.path.basename(element)
             artistasQueExisten.append(artista)
         else: 
             artista = os.path.basename(element)
+            artistasQueNoExisten.append(artista)
             rutaDestino = os.path.join(pathDestino, artista)
             rutaOrigen = os.path.join(pathOrigen, artista)
             if os.path.exists(rutaOrigen):
@@ -84,7 +81,7 @@ def sync_missing_artists(listPath: list, pathOrigen: str, pathDestino: str, modo
                     print(f"❌ Error ha ocurrido con el artista {artista}: {e}")
             else:
                 print(f"⚠️ Artista '{artista}' no se encontró en el origen.")
-    return artistasQueExisten
+    return artistasQueExisten, artistasQueNoExisten
 
 def transferir_album(artista_album_pc : str , artista_album_sd : str , album : str , modo="move"):
     if not os.path.exists(artista_album_sd):
@@ -115,28 +112,46 @@ def sincronizar_albumes_artistas(artistas_pendientes, dir_origen, dir_destino, l
             transferir_album(album_origen, album_destino, album, modo)
             
 if __name__ == "__main__":
-    
+    print("Hola Daren ! ")
+    print("Iniciando programa ... ")
     flagSD = validatePath(sdPath)
     flagLocal = validatePath(pcPath)
     flagHost = validatePath(hostPath)
     flagDB = validatePath(dbPath)
     
     if flagDB == False: 
+        print("Base de datos no encontrada creando base de datos .... ")
         os.makedirs(nameDirectoryDB, exist_ok=True)
         fd = os.open(dbPath, os.O_CREAT | os.O_WRONLY | os.O_TRUNC)
         os.close(fd)
+        print(f"Base de datos creada con exito \n ruta : {dbPath}")
         
+    print(f"Validacion de las rutas : \n PcPath : {pcPath} \n SdPath : {sdPath} ... ")
+    
     if flagSD and flagLocal: 
-        print("Ambos dispositivos concetados ...")
-        print("validando Dispositivo ... ")
+        print("Ambos dispositivos estan en linea ... ")
+        print("Paso uno validacion de Artistas Pc -> Sd")
+        artistasPc = getCleanList(pcPath, listaOmitidos)
+        artistasSD = getCleanList(sdPath, listaOmitidos)
+        artistasPcPath = joinPathArtist(artistasPc, sdPath)
+        artistasPc = getCleanList(pcPath, listaOmitidos)
+        artistasSD = getCleanList(sdPath, listaOmitidos)
+        artistasPcPath = joinPathArtist(artistasPc, sdPath)
+        artistas_pendientes_pc_sd,artistas_que_no_existen = sync_missing_artists(artistasPcPath, pcPath, sdPath , "move")
         
-        artistasPc = getCleanList(pcPath, listaOmitidos)
-        artistasSD = getCleanList(sdPath, listaOmitidos)
-        artistasPcPath = joinPathArtist(artistasPc, sdPath)
-        artistasPc = getCleanList(pcPath, listaOmitidos)
-        artistasSD = getCleanList(sdPath, listaOmitidos)
-        artistasPcPath = joinPathArtist(artistasPc, sdPath)
-        artistas_pendientes_pc_sd = sync_missing_artists(artistasPcPath, pcPath, sdPath , "move") 
+        artistas_que_ya_estaban = [a for a in artistas_pendientes_pc_sd if a not in artistas_que_no_existen]
+
+        print(f'''
+        ==================================================
+        REPORTE DE SINCRONIZACION DE ARTISTAS
+        ==================================================
+        Artistas movidos / Nuevos en la SD ({len(artistas_que_no_existen)}):
+        {', '.join(artistas_que_no_existen) if artistas_que_no_existen else 'Ninguno'}
+
+        Artistas que ya estaban en la SD ({len(artistas_que_ya_estaban)}):
+        {', '.join(artistas_que_ya_estaban) if artistas_que_ya_estaban else 'Ninguno'}
+        ==================================================
+        ''')
         
         sincronizar_albumes_artistas(
             artistas_pendientes=artistas_pendientes_pc_sd,
@@ -147,11 +162,25 @@ if __name__ == "__main__":
         )
                 
         if flagHost: 
-            print("Dispositivo conectado ... ")
+            print("Dispositivo conectado ... \nEmpezando sincronizacion entre memoria SD y Dispositivo DAP")
             artistasDap = getCleanList(hostPath,listaOmitidos)
             artistasSD = getCleanList(sdPath,listaOmitidos)
             artistasDapPath = joinPathArtist(artistasSD,hostPath) 
-            artistas_pendientes_sd_dap =  sync_missing_artists(artistasDapPath,sdPath,hostPath , "copy") 
+            print("Transfiriendo artistas pendientes ... ")
+            artistas_pendientes_sd_dap, artistas_dap_que_no_existen =  sync_missing_artists(artistasDapPath,sdPath,hostPath , "copy") 
+            artistas_dap_que_ya_estaban = [a for a in artistas_pendientes_sd_dap if a not in artistas_dap_que_no_existen]
+
+            print(f'''
+        ==================================================
+        REPORTE DE SINCRONIZACION DE DAP
+        ==================================================
+        Artistas copiados / Nuevos en el DAP ({len(artistas_dap_que_no_existen)}):
+        {', '.join(artistas_dap_que_no_existen) if artistas_dap_que_no_existen else 'Ninguno'}
+
+        Artistas que ya estaban en el DAP ({len(artistas_dap_que_ya_estaban)}):
+        {', '.join(artistas_dap_que_ya_estaban) if artistas_dap_que_ya_estaban else 'Ninguno'}
+        ==================================================
+            ''')
             sincronizar_albumes_artistas(
                 artistas_pendientes=artistas_pendientes_sd_dap,
                 dir_origen=sdPath,
