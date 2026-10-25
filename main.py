@@ -2,8 +2,15 @@ import os
 import sys
 import shutil
 
+# aun falta el tema de la base de datos por por lo que veo no hace falta solo para tener un control en github pero de ahi en fuera se pensara
+
+# ! ULTIMAS ADECUACIONES YA FUNCIONA ESTA VIVO EL SOFTWARE PERO LO QUE NOS FALTA EN ACTUALIZACIONES 
+# QUE MOVEMOS 
+# los nombres de los albumes como se mueven etc en pocas palabras mas intuitivo 
+# en pasos osea de pc a sd y despues de sd a dap asi
+
 pcPath = "/Users/luismanjarrezcarbajal/Music/Music/Media.localized/MUSIC"
-sdPath = "/Volumes/MEMORIA/MUSICA"          
+sdPath = "/Volumes/MEMORIASD/MUSICA"          
 hostPath = "/Volumes/MEMORIA/MUSICA"        
 dbPath = "dataBase/database.txt"
 nameDirectoryDB = "DataBase"
@@ -95,6 +102,9 @@ def sincronizar_albumes_artistas(artistas_pendientes, dir_origen, dir_destino, l
     for artista in artistas_pendientes:
         artista_path_origen = os.path.join(dir_origen, artista)
         artista_path_destino = os.path.join(dir_destino, artista)
+        
+        if not os.path.exists(artista_path_origen):
+            continue
         
         albumes_origen = getCleanList(artista_path_origen, lista_omitidos) 
         

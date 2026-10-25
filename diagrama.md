@@ -1,27 +1,21 @@
 graph TD
-    A[Inicio del Script] --> B{Validar Rutas: PC, SD, DB}
-    B -->|DB no existe| C[Crear directorio y archivo database.txt]
-    B -->|DB ya existe| D{¿Existen PC y SD?}
-    C --> D
+    A[Inicio del Script] --> B[Validar Rutas: sdPath, pcPath, hostPath, dbPath]
+    B --> C{¿Existe Base de Datos?}
     
-    D -->|No| E[Imprimir Error de Directorio / Fin]
-    D -->|Sí| F[Obtener y limpiar listas de artistas PC y SD]
+    C -->|No| D[Crear Carpeta Base y Archivo DB] --> E
+    C -->|Sí| E
     
-    F --> G[Construir rutas completas de la SD: artistasPcPath]
-    G --> H[Ejecutar sync_missing_artists]
+    E{¿Existen SD y PC Local?} -->|No| F[Imprimir Error: Falta Local o SD] --> Z[Fin]
+    E -->|Sí| G[Obtener Listas Limpias de Artistas: PC y SD]
     
-    subgraph Sincronización [Función: sync_missing_artists]
-        H --> I{¿El artista existe en la SD?}
-        I -->|Sí| J[Extraer nombre y agregar a artistasQueExisten]
-        I -->|No| K{¿El artista existe en la PC?}
-        K -->|Sí| L[shutil.move: PC -> SD]
-        K -->|No| M[Imprimir Advertencia de Origen]
-    end
+    G --> H[Sincronizar Artistas Faltantes PC -> SD]
+    H --> I[Sincronizar Álbumes Pendientes PC -> SD: move]
+    I --> J{¿Existe Dispositivo DAP / Host?}
     
-    J --> N[Retornar lista: artistas_pendientes_de_albumes]
-    L --> N
-    M --> N
+    J -->|No| K[Imprimir: Conectar Dispositivo] --> Z
+    J -->|Sí| L[Obtener Listas Limpias: SD y DAP]
     
-    N --> O{¿Host / DAP Conectado?}
-    O -->|Sí| P[Listo para siguiente paso: Validar Álbumes]
-    O -->|No| Q[Aviso: Conectar Dispositivo]
+    L --> M[Sincronizar Artistas Faltantes SD -> DAP]
+    M --> N[Sincronizar Álbumes Pendientes SD -> DAP: copy]
+    N --> Z
+    
