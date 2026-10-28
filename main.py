@@ -176,9 +176,6 @@ if __name__ == "__main__":
         ==================================================
         Artistas copiados / Nuevos en el DAP ({len(artistas_dap_que_no_existen)}):
         {', '.join(artistas_dap_que_no_existen) if artistas_dap_que_no_existen else 'Ninguno'}
-
-        Artistas que ya estaban en el DAP ({len(artistas_dap_que_ya_estaban)}):
-        {', '.join(artistas_dap_que_ya_estaban) if artistas_dap_que_ya_estaban else 'Ninguno'}
         ==================================================
             ''')
             sincronizar_albumes_artistas(
