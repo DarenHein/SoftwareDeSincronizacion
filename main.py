@@ -1,14 +1,10 @@
+# main.py
+from config import pcPath, sdPath, hostPath, dbPath, nameDirectoryDB
 import os
 import sys
 import shutil
 
 # Falta alimentar la base de datos 
-
-pcPath = "/Users/luismanjarrezcarbajal/Music/Music/Media.localized/MUSIC"
-sdPath = "/Volumes/MEMORIASD/MUSICA"          
-hostPath = "/Volumes/MEMORIA/MUSICA"        
-dbPath = "dataBase/database.txt"
-nameDirectoryDB = "DataBase"
 
 listaOmitidos = [
     ".DS_Store",
@@ -29,7 +25,8 @@ listaOmitidos = [
     "Automatically Add to Music",
     "Automatically Add to iTunes",
     "Unknown Artist",
-    "Unknown Album"
+    "Unknown Album",
+    ".gitkeep"
 ]
 
 def validatePath(path: str) -> bool:
