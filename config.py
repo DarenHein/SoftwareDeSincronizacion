@@ -1,11 +1,6 @@
 
-# archivo de configuracion 
 
-modoSimulacion = True # cambiar en entorono real 
-
-# config.py
-
-ES_MODO_PRUEBA = True
+ES_MODO_PRUEBA =  True
 
 if ES_MODO_PRUEBA:
     # Rutas y valores cuando estás probando localmente

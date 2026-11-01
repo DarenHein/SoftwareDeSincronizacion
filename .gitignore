@@ -1,0 +1,14 @@
+# --- Archivos de Audio (Bloqueados globalmente en el proyecto) ---
+*.flac
+*.mp3
+*.wav
+*.m4a
+*.alac
+*.aac
+*.ogg
+*.wma
+*.dsd
+*.dsf
+
+# --- Opcional: Bloquear carpetas de prueba completas si no quieres subirlas ---
+# --- test_environment/
