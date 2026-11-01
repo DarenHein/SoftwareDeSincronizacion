@@ -152,7 +152,7 @@ if __name__ == "__main__":
         {', '.join(artistas_que_ya_estaban) if artistas_que_ya_estaban else 'Ninguno'}
         ==================================================
         ''')
-        
+        # aqui hay que marcar que albumes se van a mover 
         sincronizar_albumes_artistas(
             artistas_pendientes=artistas_pendientes_pc_sd,
             dir_origen=pcPath,
