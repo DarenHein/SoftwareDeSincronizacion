@@ -1,7 +1,5 @@
 notas de cosas que se tiene que arreglar o posibles versiones a futuro 
 
-antes crear un entonro seguro 
-y crear un archivo de configuracion donde esten los paths 
 
 
 #1 no muestra los albumes que se transferiran y no sabemos cunado terminara de transladar las coasa 

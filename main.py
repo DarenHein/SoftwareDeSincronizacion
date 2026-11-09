@@ -1,5 +1,6 @@
 # main.py
 from config import pcPath, sdPath, hostPath, dbPath, nameDirectoryDB
+from dbSettings import * 
 import os
 import sys
 import shutil
@@ -92,7 +93,8 @@ def transferir_album(artista_album_pc : str , artista_album_sd : str , album : s
         except Exception as e:
             print(f"❌ Error con el álbum '{album}': {e}")
             
-def sincronizar_albumes_artistas(artistas_pendientes, dir_origen, dir_destino, lista_omitidos, modo="move"):
+            
+def albums_a_sincronizar(artistas_pendientes, dir_origen, dir_destino, lista_omitidos) : 
     for artista in artistas_pendientes:
         artista_path_origen = os.path.join(dir_origen, artista)
         artista_path_destino = os.path.join(dir_destino, artista)
@@ -102,6 +104,21 @@ def sincronizar_albumes_artistas(artistas_pendientes, dir_origen, dir_destino, l
         
         albumes_origen = getCleanList(artista_path_origen, lista_omitidos) 
         
+        i = 0 
+        for albums in albumes_origen : 
+            print(f"{i} -> {albums}")
+            i = i + 1
+            
+def sincronizar_albumes_artistas(artistas_pendientes, dir_origen, dir_destino, lista_omitidos, modo="move"):
+    for artista in artistas_pendientes:
+        artista_path_origen = os.path.join(dir_origen, artista)
+        artista_path_destino = os.path.join(dir_destino, artista)
+        
+        if not os.path.exists(artista_path_origen):
+            continue
+        
+        albumes_origen = getCleanList(artista_path_origen, lista_omitidos) 
+                    
         for album in albumes_origen:
             album_origen = os.path.join(artista_path_origen, album)
             album_destino = os.path.join(artista_path_destino, album)
@@ -122,6 +139,9 @@ if __name__ == "__main__":
         fd = os.open(dbPath, os.O_CREAT | os.O_WRONLY | os.O_TRUNC)
         os.close(fd)
         print(f"Base de datos creada con exito \n ruta : {dbPath}")
+        
+        
+        
         
     print(f"Validacion de las rutas : \n PcPath : {pcPath} \n SdPath : {sdPath} ... ")
     
@@ -151,6 +171,13 @@ if __name__ == "__main__":
         ''')
         # aqui hay que marcar que albumes se van a mover 
         
+        # albums_a_sincronizar(
+        #     artistas_pendientes=artistas_pendientes_pc_sd,
+        #     dir_origen=pcPath,
+        #     dir_destino=sdPath,
+        #     lista_omitidos=listaOmitidos,
+        # )
+        
         sincronizar_albumes_artistas(
             artistas_pendientes=artistas_pendientes_pc_sd,
             dir_origen=pcPath,
@@ -176,6 +203,14 @@ if __name__ == "__main__":
         {', '.join(artistas_dap_que_no_existen) if artistas_dap_que_no_existen else 'Ninguno'}
         ==================================================
             ''')
+            
+            # albums_a_sincronizar(
+            #      artistas_pendientes=artistas_pendientes_sd_dap,
+            #      dir_origen=sdPath,
+            #      dir_destino=hostPath,
+            #      lista_omitidos=listaOmitidos,
+            # )
+            
             sincronizar_albumes_artistas(
                 artistas_pendientes=artistas_pendientes_sd_dap,
                 dir_origen=sdPath,
