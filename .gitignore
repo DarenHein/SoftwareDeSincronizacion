@@ -1,0 +1,15 @@
+cat << 'EOF' > .gitignore
+# Archivos de audio
+*.mp3
+*.flac
+*.wav
+*.m4a
+*.alac
+*.ogg
+
+# Entorno y caché de Python
+__pycache__/
+*.py[cod]
+venv/
+.DS_Store
+EOF
